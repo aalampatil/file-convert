@@ -91,6 +91,8 @@ Invalid numeric settings fail early. The application does not need database cred
 
 ## Checks
 
+See the [verification record](docs/VERIFICATION.md) for the production-container results and tested boundaries.
+
 ```bash
 npm run lint
 npm run typecheck

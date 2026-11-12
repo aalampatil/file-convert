@@ -10,7 +10,10 @@ test("Markdown upload converts, downloads, and survives a page reload", async ({
     "Same good work.",
   );
   await page.setViewportSize({ width: 1440, height: 1024 });
-  await page.screenshot({ path: "test-results/desktop-workspace.png", fullPage: true });
+  await page.screenshot({
+    path: "test-results/desktop-workspace.png",
+    fullPage: true,
+  });
   await expect(
     page.getByRole("button", { name: "Convert file", exact: true }),
   ).toBeDisabled();
