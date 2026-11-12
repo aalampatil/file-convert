@@ -10,6 +10,8 @@ Suggested topics: `nextjs`, `typescript`, `file-converter`, `markdown-to-pdf`, `
 
 The same description is stored in package.json. Git-tracked files do not change GitHub's About description or repository settings by themselves.
 
+Verified through GitHub's API on 2026-11-12: the About description and topics are applied, Issues are enabled, and private vulnerability reporting and vulnerability alerts are enabled. Recheck these settings when transferring or forking the repository.
+
 ## Maintainer settings
 
 - Enable Issues so issue forms work.

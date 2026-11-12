@@ -8,8 +8,6 @@ export default defineConfig([
     ".next/**",
     ".worker/**",
     "node_modules/**",
-    "client/**",
-    "server/**",
     "data/**",
     "test-results/**",
     "playwright-report/**",
