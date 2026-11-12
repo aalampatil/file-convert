@@ -6,4 +6,12 @@ dist
 server/data
 client/dist
 *.tsbuildinfo
+.next
+.worker
+next-env.d.ts
+data
+.env.*
+!.env.example
+test-results
+playwright-report
 

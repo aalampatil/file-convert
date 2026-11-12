@@ -1,16 +1,59 @@
 {
-  "name": "cloudconvert-clone",
+  "name": "folio",
+  "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "client",
-    "server"
-  ],
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+  "type": "module",
+  "engines": {
+    "node": ">=24"
   },
   "scripts": {
-    "dev": "concurrently -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
-    "build": "npm run build -w server && npm run build -w client",
-    "start": "npm run start -w server"
+    "dev": "npm run build:workers && next dev",
+    "build": "npm run build:workers && next build",
+    "build:workers": "tsc -p tsconfig.worker.json",
+    "start": "node scripts/start.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "npm run build:workers && node --test --test-concurrency=1 tests/*.test.mjs",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "docx": "^9.15.3",
+    "marked": "^18.2.0",
+    "next": "16.4.6",
+    "pdfjs-dist": "^6.5.438",
+    "pdfkit": "^0.20.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/busboy": "^1.5.4",
+    "@types/node": "^24.0.0",
+    "@types/pdfkit": "^0.17.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "jszip": "^3.10.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "description": "Self-hosted Next.js file converter for Markdown, Word, PDF, and images, with private uploads, live progress, and automatic file expiry.",
+  "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/aalampatil/file-convert.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/aalampatil/file-convert/issues"
+  },
+  "homepage": "https://github.com/aalampatil/file-convert#readme",
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    }
   }
 }

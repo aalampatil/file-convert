@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": ".worker",
+    "rootDir": "src/server",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src/server/config.ts", "src/server/services/**/*.ts"]
+}
