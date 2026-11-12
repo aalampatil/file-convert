@@ -8,21 +8,29 @@ A full-stack Next.js file converter for Markdown, Word, PDF, and images. Upload 
 
 ## What it converts
 
-| Input                         | Output         | Behavior                                                                                                                |
-| ----------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Markdown (`.md`, `.markdown`) | PDF            | Headings, lists, code blocks, and text tables. Raw HTML is ignored; image alt text is retained without loading images.  |
-| Word (`.doc`, `.docx`)        | PDF            | LibreOffice renders the document. Requires LibreOffice locally; included in Docker.                                     |
-| PDF                           | Word (`.docx`) | Extracts selectable text with page breaks. Images, tables, columns, and original styling are not reconstructed. No OCR. |
-| PNG, JPG, JPEG, WebP          | PNG, JPG, WebP | Real image conversion, with orientation correction.                                                                     |
-| Plain text (`.txt`)           | PDF            | UTF-8 text in a paginated document.                                                                                     |
+| Input                         | Output         | Behavior                                                                                                                                             |
+| ----------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Markdown (`.md`, `.markdown`) | PDF            | Preserves headings, emphasis, nested lists, code, links, real table cells and embedded PNG/JPEG images. Unresolved images and raw HTML are rejected. |
+| Word (`.doc`, `.docx`)        | PDF            | LibreOffice renders the document. Requires LibreOffice locally; included in Docker.                                                                  |
+| PDF                           | Word (`.docx`) | Reconstructs text styling, tables, images and page layout. Complex layouts may need review; image-only pages remain images without OCR.              |
+| PNG, JPG, JPEG, WebP          | PNG, JPG, WebP | Real image conversion, with orientation correction.                                                                                                  |
+| Plain text (`.txt`)           | PDF            | UTF-8 text in a paginated document.                                                                                                                  |
 
 Unsupported conversions are rejected. Files are never merely renamed.
 
 The default upload limit is 25 MB. Markdown and text inputs are limited to 2 MB; PDFs to 200 pages; images to 40 million pixels. Downloads expire one hour after upload. Active conversions finish before cleanup, which runs every minute. Session history keeps up to 20 job IDs in your browser; file contents stay on the server.
 
+## Content and structure preservation
+
+Markdown retains heading levels, bold/italic text, nested lists, code, hyperlinks, table cells and embedded PNG/JPEG images. Local or remote image references cannot be resolved from a single uploaded Markdown file; embed them as data URLs. Raw HTML and unresolved images are rejected so content is not silently omitted.
+
+Word-to-PDF uses LibreOffice to preserve the document's layout, tables, images and page dimensions. PDF-to-Word reconstructs formatting, tables, images, page sizes and reading order with a layout engine. Failed pages are not skipped, and the output is checked for missing source text and images before it is accepted.
+
+Complex PDFs can still require manual layout review: PDF does not reliably encode the original document's semantic structure. Image-only pages remain images rather than editable OCR text. The checks detect content loss; they are not a guarantee of pixel-identical rendering for every document.
+
 ## Local development
 
-Use **Node.js 24 LTS** and npm. Install LibreOffice if you need Word-to-PDF conversion; other conversions work without it.
+Use **Node.js 24 LTS** and npm. Word-to-PDF requires LibreOffice. PDF-to-Word requires the Python layout engine described below.
 
 ```bash
 git clone https://github.com/aalampatil/file-convert.git
@@ -32,6 +40,15 @@ npm run dev
 ```
 
 Open **http://localhost:3000**. Copy [`.env.example`](.env.example) to `.env.local` when you need custom settings. On Windows, the default LibreOffice path is `C:/Program Files/LibreOffice/program/soffice.exe`; on Linux it is `/usr/bin/libreoffice`.
+
+For native PDF-to-Word conversion, install Python 3.11 or newer and its layout dependencies:
+
+```powershell
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install --require-hashes -r requirements.txt
+```
+
+On Linux/macOS, use `python3 -m venv .venv` and `.venv/bin/python -m pip install --require-hashes -r requirements.txt`. The app discovers this environment automatically; set `PYTHON_PATH` to use another interpreter. Docker includes this engine. An unavailable engine disables PDF-to-Word conversion instead of falling back to a text-only export.
 
 `npm run dev` compiles the conversion workers before starting Next.js. Restart it after changing converter code. Normal UI and route changes use Next.js hot reload.
 
@@ -47,7 +64,7 @@ docker compose ps
 docker compose logs -f
 ```
 
-Open **http://localhost:3000**. The image installs LibreOffice and Unicode fonts, runs as a non-root user, and stores jobs and downloads in a named persistent volume. Compose sets a read-only root filesystem, memory/CPU/process limits, and a health check. Put a TLS reverse proxy in front of it for public deployment.
+Open **http://localhost:3000**. The image installs LibreOffice, the Python PDF layout engine and Unicode fonts, runs as a non-root user, and stores jobs and downloads in a named persistent volume. Compose sets a read-only root filesystem, memory/CPU/process limits, and a health check. Put a TLS reverse proxy in front of it for public deployment.
 
 For a native Node.js deployment:
 
@@ -57,7 +74,7 @@ npm run build
 npm start
 ```
 
-The health endpoint is `GET /healthz`; `wordConversion` indicates whether LibreOffice is available. Use `npm start` for production so client IP rate limits and shutdown handling are active. Do not substitute `next start` without providing the same lifecycle behavior.
+The health endpoint is `GET /healthz`; `wordConversion` and `pdfLayout` indicate whether the native conversion engines are available. Use `npm start` for production so client IP rate limits and shutdown handling are active. Do not substitute `next start` without providing the same lifecycle behavior.
 
 ### Operational boundaries
 
@@ -87,7 +104,7 @@ The health endpoint is `GET /healthz`; `wordConversion` indicates whether LibreO
 | `PDF_BOLD_FONT_PATH`         | DejaVu Sans Bold if available | PDF heading font                          |
 | `TRUST_PROXY_HOPS`           | `0`                           | Number of trusted reverse proxy hops, 0–5 |
 
-Invalid numeric settings fail early. The application does not need database credentials or an external conversion service.
+Invalid numeric settings fail early. The application does not need database credentials or an external conversion service. `PYTHON_PATH` selects the PDF layout interpreter; `PDF_ITALIC_FONT_PATH` and `PDF_BOLD_ITALIC_FONT_PATH` override italic fonts.
 
 ## Checks
 
@@ -103,7 +120,7 @@ npm run test:e2e
 npm audit
 ```
 
-Conversion tests verify file signatures and extracted content, invalid input, queue limits, expiry, and restart recovery. Word tests require LibreOffice; set `REQUIRE_OFFICE=1` to make its absence a failure. CI installs LibreOffice and runs these tests. Playwright tests exercise the production UI, upload, conversion, download, session restoration, errors, and mobile layout.
+Conversion tests verify file signatures and extracted content, invalid input, queue limits, expiry, and restart recovery. Word tests require LibreOffice; set `REQUIRE_OFFICE=1` and `REQUIRE_PDF_LAYOUT=1` to require both native engines. CI installs LibreOffice and runs these tests. Playwright tests exercise the production UI, upload, conversion, download, session restoration, errors, and mobile layout.
 
 ## Structure
 
@@ -127,4 +144,4 @@ Security issues belong in the [private reporting process](SECURITY.md), not a pu
 
 ## License
 
-[MIT](LICENSE), copyright © 2026 Folio contributors.
+[MIT](LICENSE), copyright © 2026 Folio contributors. See [third-party notices](THIRD_PARTY_NOTICES.md) for native-tool and dependency licensing, including PyMuPDF/MuPDF.

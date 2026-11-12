@@ -1,15 +1,19 @@
-FROM node:25-bookworm-slim AS base
+FROM node:24-bookworm-slim AS base
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libreoffice-writer fonts-dejavu-core fonts-liberation tini ca-certificates \
+    && apt-get install -y --no-install-recommends libreoffice-writer fonts-dejavu-core fonts-liberation tini ca-certificates python3 python3-venv libglib2.0-0 libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+COPY requirements.txt ./requirements.txt
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --require-hashes -r requirements.txt
+ENV PYTHON_PATH=/opt/venv/bin/python PYTHONDONTWRITEBYTECODE=1
 
 FROM base AS build
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ENV REQUIRE_OFFICE=1
+ENV REQUIRE_OFFICE=1 REQUIRE_PDF_LAYOUT=1
 RUN npm run lint && npm run typecheck && npm test && npm run build
 
 FROM base AS production
@@ -24,6 +28,7 @@ COPY --from=build /app/.worker ./.worker
 COPY --from=build /app/public ./public
 COPY --from=build /app/next.config.mjs ./next.config.mjs
 COPY --from=build /app/scripts ./scripts
+COPY LICENSE THIRD_PARTY_NOTICES.md ./
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

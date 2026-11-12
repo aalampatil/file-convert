@@ -19,6 +19,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: 1
       REQUIRE_OFFICE: 1
+      REQUIRE_PDF_LAYOUT: 1
     steps:
       - uses: actions/checkout@v7
         with:
@@ -29,6 +30,7 @@ jobs:
           cache: npm
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer fonts-dejavu-core
       - run: npm ci
+      - run: python3 -m venv .venv && .venv/bin/python -m pip install --require-hashes -r requirements.txt
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -40,6 +42,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: 1
       REQUIRE_OFFICE: 1
+      REQUIRE_PDF_LAYOUT: 1
     steps:
       - uses: actions/checkout@v7
         with:
@@ -50,6 +53,7 @@ jobs:
           cache: npm
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer fonts-dejavu-core
       - run: npm ci
+      - run: python3 -m venv .venv && .venv/bin/python -m pip install --require-hashes -r requirements.txt
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

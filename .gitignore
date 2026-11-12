@@ -12,4 +12,7 @@ data
 !.env.example
 test-results
 playwright-report
+.venv
+__pycache__
+*.pyc
 

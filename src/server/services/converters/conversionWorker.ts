@@ -24,18 +24,18 @@ process.once(
           process.send?.({ progress: p });
         },
       });
-      process.send?.({ result }, () => process.disconnect());
+      process.send?.({ result }, () => process.disconnect?.());
     } catch (err) {
       console.error("Conversion failed:", err);
       const known =
         err instanceof Error &&
-        /^(No selectable|PDFs are limited|Text and Markdown|This Markdown|This Word|Word conversion|The document renderer)/.test(
+        /^(No selectable|PDFs are limited|PDF conversion|This PDF|Text and Markdown|This Markdown|This Word|Word conversion|The document renderer)/.test(
           err.message,
         );
       const message = known
         ? (err as Error).message
         : "This file could not be converted. Check that it is valid and not password-protected.";
-      process.send?.({ error: message }, () => process.disconnect());
+      process.send?.({ error: message }, () => process.disconnect?.());
     }
   },
 );

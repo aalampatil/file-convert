@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { Document, Packer, Paragraph } from "docx";
+import JSZip from "jszip";
+import sharp from "sharp";
 test("Markdown upload converts, downloads, and survives a page reload", async ({
   page,
 }) => {
@@ -173,9 +175,7 @@ test("Corrupt files report a failed job in the UI", async ({ page }) => {
   });
   await page.getByRole("button", { name: "Convert file", exact: true }).click();
   await expect(page.getByText("Failed", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("This file could not be converted.", { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText(/could not be converted/i)).toBeVisible();
 });
 test("Mobile layout fits and all tools are accessible", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -205,4 +205,78 @@ test("API outages are visible and retry restores the converter", async ({
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page.getByText("Ready when you are")).toBeVisible();
   await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
+});
+
+test("Downloaded conversions retain document tables, styled text and images", async ({
+  request,
+}) => {
+  const formats = await (await request.get("/api/formats")).json();
+  const layout = formats.groups.find(
+    (group: { id: string }) => group.id === "pdf",
+  ).available;
+  if (process.env.REQUIRE_PDF_LAYOUT === "1") expect(layout).toBe(true);
+  test.skip(!layout, "The PDF layout engine is not installed.");
+  const image = await sharp({
+    create: { width: 120, height: 60, channels: 3, background: "#d46342" },
+  })
+    .png()
+    .toBuffer();
+  const markdown =
+    "# Preserved heading\n\nA **bold phrase** and an *italic phrase*.\n\n- Parent item\n  - Nested item\n\n| Product | Quantity |\n| --- | --- |\n| Original item | 42 |\n\n![Figure](data:image/png;base64," +
+    image.toString("base64") +
+    ")";
+  const uploaded = await request.post("/api/jobs", {
+    multipart: {
+      file: {
+        name: "structure.md",
+        mimeType: "text/markdown",
+        buffer: Buffer.from(markdown),
+      },
+      targetFormat: "pdf",
+    },
+  });
+  expect(uploaded.status()).toBe(201);
+  const first = await uploaded.json();
+  await expect
+    .poll(
+      async () =>
+        (await (await request.get("/api/jobs/" + first.id)).json()).status,
+    )
+    .toBe("finished");
+  const pdf = await (
+    await request.get("/api/jobs/" + first.id + "/download")
+  ).body();
+  const exported = await request.post("/api/jobs", {
+    multipart: {
+      file: { name: "structure.pdf", mimeType: "application/pdf", buffer: pdf },
+      targetFormat: "docx",
+    },
+  });
+  expect(exported.status()).toBe(201);
+  const next = await exported.json();
+  await expect
+    .poll(
+      async () =>
+        (await (await request.get("/api/jobs/" + next.id)).json()).status,
+    )
+    .toBe("finished");
+  const archive = await JSZip.loadAsync(
+    await (await request.get("/api/jobs/" + next.id + "/download")).body(),
+  );
+  const xml = await archive.file("word/document.xml")!.async("string");
+  for (const text of [
+    "Preserved heading",
+    "bold phrase",
+    "italic phrase",
+    "Nested item",
+    "Original item",
+    "42",
+  ])
+    expect(xml).toContain(text);
+  expect(xml).toContain("<w:tbl>");
+  expect(xml).toMatch(/<w:b(?:\s[^>]*)?\/>/);
+  expect(xml).toMatch(/<w:i(?:\s[^>]*)?\/>/);
+  expect(
+    Object.keys(archive.files).some((name) => name.startsWith("word/media/")),
+  ).toBe(true);
 });

@@ -1,13 +1,14 @@
 import path from "node:path";
 import { access } from "node:fs/promises";
 import { config } from "../config.ts";
+import { pdfLayoutAvailable } from "./pdfLayout.ts";
 export const conversionGroups = [
   {
     id: "markdown",
     title: "Markdown to PDF",
     inputs: ["md", "markdown"],
     outputs: ["pdf"],
-    note: "Headings, lists, code, tables and links. Remote images and raw HTML are omitted.",
+    note: "Preserves headings, emphasis, nested lists, tables, links and embedded PNG/JPEG images. Linked images and raw HTML are rejected to prevent missing content.",
   },
   {
     id: "word",
@@ -21,7 +22,7 @@ export const conversionGroups = [
     title: "PDF to Word",
     inputs: ["pdf"],
     outputs: ["docx"],
-    note: "Exports selectable text with page breaks. Images and original layout are omitted. Scanned PDFs require OCR and are not supported.",
+    note: "Preserves text formatting, tables, images and page layout where supported. Complex layouts may need review. Scanned content remains an image; no OCR.",
   },
   {
     id: "image",
@@ -68,13 +69,16 @@ export async function officeAvailable() {
   );
 }
 export async function supportedFormats() {
-  const office = await officeAvailable();
+  const [office, pdfLayout] = await Promise.all([
+    officeAvailable(),
+    pdfLayoutAvailable(),
+  ]);
   return {
     maxUploadBytes: config.maxUploadBytes,
     retentionHours: config.retentionMs / 3600000,
     groups: conversionGroups.map((g) => ({
       ...g,
-      available: g.id !== "word" || office,
+      available: g.id === "word" ? office : g.id === "pdf" ? pdfLayout : true,
     })),
   };
 }

@@ -28,7 +28,7 @@ export async function convertFile(
     conversion = "libreoffice";
   } else {
     await convertPdfToWord(input);
-    conversion = "pdfjs";
+    conversion = "pdf2docx";
   }
   return { outputPath: input.outputPath, conversion };
 }

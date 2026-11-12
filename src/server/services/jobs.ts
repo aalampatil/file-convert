@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomBytes } from "node:crypto";
-import { fork, type ChildProcess } from "node:child_process";
+import { execFileSync, fork, type ChildProcess } from "node:child_process";
 import { config } from "../config.ts";
 import type { JobRecord } from "./jobTypes.ts";
 import { ensureDirs, outputsDir, uploadsDir } from "./storage.ts";
@@ -101,7 +101,12 @@ function pump() {
 function killWorker(worker: ChildProcess) {
   if (!worker.pid) return;
   try {
-    if (process.platform === "win32") worker.kill("SIGKILL");
+    if (process.platform === "win32")
+      execFileSync("taskkill", ["/PID", String(worker.pid), "/T", "/F"], {
+        windowsHide: true,
+        stdio: "ignore",
+        timeout: 5000,
+      });
     else process.kill(-worker.pid, "SIGKILL");
   } catch {
     /* Worker may already have exited. */

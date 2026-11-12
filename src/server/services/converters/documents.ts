@@ -3,8 +3,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { convertPdfLayout } from "../pdfLayout.ts";
 import type { ConversionInput } from "./convertFile.ts";
 import { officeExecutable, officeAvailable } from "../supportedFormats.ts";
 const exec = promisify(execFile);
@@ -71,81 +70,7 @@ export async function convertWordToPdf(input: ConversionInput) {
 }
 
 export async function convertPdfToWord(input: ConversionInput) {
-  const loading = getDocument({
-    data: new Uint8Array(await fs.readFile(input.inputPath)),
-    useSystemFonts: false,
-    disableFontFace: true,
-    verbosity: 0,
-  });
-  const pdf = await loading.promise;
-  try {
-    if (pdf.numPages > 200)
-      throw new Error(
-        "PDFs are limited to 200 pages. Split this document and try again.",
-      );
-    const paragraphs: Paragraph[] = [];
-    let extracted = 0;
-    for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
-      const page = await pdf.getPage(pageNo);
-      const content = await page.getTextContent();
-      let line = "";
-      let lastY: number | null = null;
-      let lastRight: number | null = null;
-      const flush = () => {
-        if (line.trim()) {
-          paragraphs.push(
-            new Paragraph({
-              children: [new TextRun(line.trim())],
-              spacing: { after: 120 },
-            }),
-          );
-          extracted += line.trim().length;
-        }
-        line = "";
-        lastRight = null;
-      };
-      if (pageNo > 1) paragraphs.push(new Paragraph({ pageBreakBefore: true }));
-      for (const item of content.items) {
-        if (!("str" in item)) continue;
-        const y = item.transform[5] as number;
-        const x = item.transform[4] as number;
-        if (
-          lastY !== null &&
-          Math.abs(y - lastY) > Math.max(2, item.height * 0.5)
-        )
-          flush();
-        if (
-          line &&
-          lastRight !== null &&
-          x - lastRight > 1 &&
-          !line.endsWith(" ") &&
-          !item.str.startsWith(" ")
-        )
-          line += " ";
-        line += item.str;
-        lastRight = x + item.width;
-        lastY = y;
-        if (item.hasEOL) {
-          flush();
-          lastY = null;
-        }
-      }
-      flush();
-      page.cleanup();
-      await input.onProgress(15 + Math.round((pageNo / pdf.numPages) * 75));
-    }
-    if (extracted === 0)
-      throw new Error(
-        "No selectable text was found. Scanned PDFs require OCR, which is not supported.",
-      );
-    const doc = new Document({
-      creator: "Folio",
-      title: path.parse(input.inputPath).name,
-      styles: { default: { document: { run: { font: "Calibri", size: 22 } } } },
-      sections: [{ children: paragraphs }],
-    });
-    await fs.writeFile(input.outputPath, await Packer.toBuffer(doc));
-  } finally {
-    await loading.destroy();
-  }
+  await input.onProgress(20);
+  await convertPdfLayout(input.inputPath, input.outputPath);
+  await input.onProgress(95);
 }

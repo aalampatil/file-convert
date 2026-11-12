@@ -385,8 +385,8 @@ export function ConverterApp() {
                 ) : null}
                 {group && !group.available ? (
                   <div className="notice" role="status">
-                    Word conversion is temporarily unavailable on this server.
-                    Try another converter.
+                    {tool.label} is temporarily unavailable on this server. Try
+                    another converter.
                   </div>
                 ) : null}
                 <FileDrop

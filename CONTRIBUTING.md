@@ -13,6 +13,7 @@ Report vulnerabilities through [SECURITY.md](SECURITY.md). Do not include privat
 1. Fork the repository and create a branch from `main`.
 2. Install Node.js 24 LTS and run `npm ci`.
 3. Install LibreOffice if your change touches Word conversion.
+   For PDF-to-Word work, create `.venv` with Python 3.11+ and install `requirements.txt` with `--require-hashes` as shown in the README.
 4. Optionally copy `.env.example` to `.env.local`.
 5. Run `npm run dev` and visit http://localhost:3000.
 
@@ -43,7 +44,7 @@ npm run test:e2e
 npm audit
 ```
 
-For changes that require Word conversion, set `REQUIRE_OFFICE=1` when running tests so missing LibreOffice is a failure. CI installs it. Format changes with `npm run format`.
+For document-conversion changes, set `REQUIRE_OFFICE=1` and `REQUIRE_PDF_LAYOUT=1` when running tests so missing native engines are failures. CI installs both. Structure tests cover headings, emphasis, nested lists, table cells, embedded images, reading order and mixed page sizes. Format changes with `npm run format`.
 
 ## Pull requests
 

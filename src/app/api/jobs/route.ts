@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { initialize } from "@/server/services/runtime";
 import { createJob, reserveUpload } from "@/server/services/jobs";
 import { publicJob } from "@/server/services/jobTypes";
+import { pdfLayoutAvailable } from "@/server/services/pdfLayout";
 import {
   assertConversion,
   officeAvailable,
@@ -31,6 +32,14 @@ export async function POST(request: Request) {
       throw Object.assign(
         new Error(
           "Word conversion is unavailable on this server. LibreOffice must be installed.",
+        ),
+        { status: 503 },
+      );
+    }
+    if (/\.pdf$/i.test(upload.originalName) && !(await pdfLayoutAvailable())) {
+      throw Object.assign(
+        new Error(
+          "PDF to Word is unavailable. The server's layout engine must be installed.",
         ),
         { status: 503 },
       );

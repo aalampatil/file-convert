@@ -10,7 +10,7 @@ export type Job = {
   message?: string;
   result?: {
     outputName: string;
-    conversion: "sharp" | "pdfkit" | "libreoffice" | "pdfjs";
+    conversion: "sharp" | "pdfkit" | "libreoffice" | "pdfjs" | "pdf2docx";
   };
 };
 export type FormatGroup = {

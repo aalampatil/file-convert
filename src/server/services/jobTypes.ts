@@ -1,5 +1,6 @@
 export type JobStatus = "queued" | "processing" | "finished" | "failed";
-export type ConversionEngine = "sharp" | "pdfkit" | "libreoffice" | "pdfjs";
+export type ConversionEngine =
+  "sharp" | "pdfkit" | "libreoffice" | "pdfjs" | "pdf2docx";
 export type JobRecord = {
   id: string;
   createdAt: string;

@@ -10,6 +10,6 @@ Read the [README](README.md) first, especially supported conversions, limits, Li
 
 Include your commit/version, Node.js and browser versions, deployment method, conversion pair, and redacted error messages. Share small synthetic files only. Never upload resumes, contracts, financial records, passwords, environment files, or active download links to a public issue.
 
-PDF-to-Word exports selectable text; scanned PDFs require OCR and complex layouts are not reconstructed. Unsupported formats are rejected. These are documented limitations rather than conversion failures.
+PDF-to-Word reconstructs text formatting, tables, images and page layout. Complex layouts may need review. Scanned pages remain images; OCR is not provided. Unsupported formats are rejected. These are documented limitations rather than conversion failures.
 
 Support is community-driven. There is no paid support or response-time commitment.
