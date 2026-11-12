@@ -2,8 +2,6 @@ node_modules
 .next
 .worker
 data
-client
-server
 package-lock.json
 test-results
 playwright-report

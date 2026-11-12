@@ -12,5 +12,9 @@
     "types": ["node"],
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src/server/config.ts", "src/server/services/**/*.ts"]
+  "include": [
+    "src/server/config.ts",
+    "src/server/upload.ts",
+    "src/server/services/**/*.ts"
+  ]
 }

@@ -88,7 +88,10 @@ export function ConverterApp() {
   const submitting = useRef(false);
   const tool = tools.find((t) => t.id === toolId)!,
     group = formats?.groups.find((g) => g.id === toolId);
-  const maxBytes = formats?.maxUploadBytes || 25 * 1048576,
+  const maxBytes = Math.min(
+      formats?.maxUploadBytes || 25 * 1048576,
+      ["markdown", "text"].includes(toolId) ? 2 * 1048576 : Infinity,
+    ),
     retention = formats?.retentionHours || 1;
   useEffect(() => {
     const controller = new AbortController();
