@@ -5,12 +5,14 @@ import type { Job, SupportedFormatsResponse } from "../utils/types";
 import { useJobSocket } from "../utils/useJobSocket";
 import { FileDrop } from "./components/FileDrop";
 import { JobsList } from "./components/JobsList";
+import { TearableOverlay } from "./components/TearableOverlay";
 
 export function App() {
   const [formats, setFormats] = useState<SupportedFormatsResponse | null>(null);
   const [selectedFormat, setSelectedFormat] = useState("png");
   const [jobs, setJobs] = useState<Job[]>([]);
   const socket = useJobSocket();
+  const [showTear, setShowTear] = useState(() => sessionStorage.getItem("tearable:dismissed") !== "1");
 
   useEffect(() => {
     api.getFormats().then(setFormats).catch(() => setFormats(null));
@@ -43,6 +45,14 @@ export function App() {
 
   return (
     <>
+      {showTear ? (
+        <TearableOverlay
+          onDone={() => {
+            sessionStorage.setItem("tearable:dismissed", "1");
+            setShowTear(false);
+          }}
+        />
+      ) : null}
       <div className="nav">
         <div className="navInner">
           <a className="brand" href="/">
@@ -125,4 +135,3 @@ export function App() {
     </>
   );
 }
-

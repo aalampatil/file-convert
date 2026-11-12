@@ -1,12 +1,16 @@
 :root {
   color-scheme: dark;
-  --bg: #0e0e0e;
-  --surface: #161616;
-  --text: #f0f0f0;
-  --muted: #666;
-  --accent: #d4ff00;
-  --border: rgba(255, 255, 255, 0.08);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --bg: #0b0b0c;
+  --surface: #111114;
+  --surface-2: #16161a;
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.62);
+  --accent: rgba(255, 255, 255, 0.92);
+  --accent-r: 255;
+  --accent-g: 255;
+  --accent-b: 255;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
   --radius: 14px;
   --radius-sm: 10px;
   --max: 1120px;
@@ -23,9 +27,7 @@ body {
 
 body {
   margin: 0;
-  background: radial-gradient(900px 600px at 70% -10%, rgba(212, 255, 0, 0.12), transparent 60%),
-    radial-gradient(900px 600px at 10% 20%, rgba(212, 255, 0, 0.07), transparent 50%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
@@ -42,12 +44,77 @@ a {
   padding: 24px;
 }
 
+.tearOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: auto;
+  background: transparent;
+  transition: opacity 220ms ease;
+}
+
+.tearOverlayFade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tearCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+.tearCanvas:active {
+  cursor: grabbing;
+}
+
+.tearHint {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  backdrop-filter: blur(10px);
+}
+
+.tearTitle {
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.tearSub {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tearSkip {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tearSkip:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
 .nav {
   position: sticky;
   top: 0;
   z-index: 20;
   backdrop-filter: blur(14px);
-  background: rgba(14, 14, 14, 0.7);
+  background: rgba(11, 11, 12, 0.72);
   border-bottom: 1px solid var(--border);
 }
 
@@ -73,8 +140,8 @@ a {
   width: 28px;
   height: 28px;
   border-radius: 10px;
-  background: linear-gradient(145deg, rgba(212, 255, 0, 1), rgba(212, 255, 0, 0.35));
-  box-shadow: 0 0 0 1px rgba(212, 255, 0, 0.35), 0 10px 25px rgba(212, 255, 0, 0.12);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.22));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
 .navLinks {
@@ -103,7 +170,7 @@ a {
 
 .subhead {
   margin: 0;
-  color: rgba(240, 240, 240, 0.78);
+  color: rgba(255, 255, 255, 0.72);
   max-width: 62ch;
 }
 
@@ -126,10 +193,10 @@ a {
 }
 
 .drop {
-  border: 1px dashed rgba(212, 255, 0, 0.45);
+  border: 1px dashed rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.28);
   border-radius: var(--radius-sm);
   padding: 16px;
-  background: rgba(212, 255, 0, 0.04);
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.04);
   min-height: 126px;
   display: flex;
   flex-direction: column;
@@ -137,8 +204,8 @@ a {
 }
 
 .dropActive {
-  outline: 2px solid rgba(212, 255, 0, 0.55);
-  background: rgba(212, 255, 0, 0.07);
+  outline: 2px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.35);
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.06);
 }
 
 .dropTitle {
@@ -153,8 +220,8 @@ a {
 
 .btn {
   appearance: none;
-  border: 1px solid rgba(212, 255, 0, 0.55);
-  background: rgba(212, 255, 0, 0.12);
+  border: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.18);
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.08);
   color: var(--text);
   border-radius: 12px;
   padding: 12px 14px;
@@ -164,7 +231,7 @@ a {
 }
 
 .btn:hover {
-  background: rgba(212, 255, 0, 0.16);
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.12);
 }
 
 .btn:active {
@@ -172,18 +239,22 @@ a {
 }
 
 .btnPrimary {
-  border-color: rgba(212, 255, 0, 0.95);
-  background: rgba(212, 255, 0, 0.22);
+  border-color: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.42);
+  background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.14);
 }
 
 .select {
   width: 100%;
-  background: #101010;
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
   padding: 12px 12px;
   outline: none;
+}
+.select:focus,
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.14);
 }
 
 .sideCard {
@@ -198,7 +269,7 @@ a {
 
 .sideText {
   margin: 0 0 10px;
-  color: rgba(240, 240, 240, 0.75);
+  color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
 }
 
@@ -209,7 +280,7 @@ a {
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 6px 10px;
-  color: rgba(240, 240, 240, 0.8);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 12px;
   margin: 0 8px 8px 0;
 }
@@ -259,7 +330,7 @@ a {
 
 .barFill {
   height: 100%;
-  background: linear-gradient(90deg, rgba(212, 255, 0, 0.3), rgba(212, 255, 0, 1));
+  background: rgba(255, 255, 255, 0.85);
   width: 0%;
 }
 
@@ -271,4 +342,3 @@ a {
     grid-template-columns: 1fr;
   }
 }
-
