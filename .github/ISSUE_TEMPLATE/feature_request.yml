@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a focused improvement to Folio.
+title: "[Feature]: "
+body:
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Before requesting
+      options:
+        - label: I searched existing issues for this idea.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe a concrete use case.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Include input/output formats, examples, and limits if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: considerations
+    attributes:
+      label: Privacy, accessibility, or deployment considerations

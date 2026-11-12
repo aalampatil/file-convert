@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/aalampatil/file-convert/security
+    about: Read SECURITY.md and use private reporting. Do not share exploit details publicly.
+  - name: Code of conduct
+    url: https://github.com/aalampatil/file-convert/blob/main/CODE_OF_CONDUCT.md
+    about: Reporting guidance and participation standards.

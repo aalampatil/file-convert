@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem using synthetic, non-sensitive files.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: Do not share private documents, secrets, or live download links. Report vulnerabilities through SECURITY.md.
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Before reporting
+      options:
+        - label: I searched existing issues and read the documented format limitations.
+          required: true
+        - label: This report contains no confidential files or security exploit details.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the conversion pair, approximate file size, and a minimal synthetic example.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit/version, OS, Node.js, browser, native or Docker setup, and LibreOffice version.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted logs or screenshots
+      description: Remove names, paths, tokens, and download URLs.
