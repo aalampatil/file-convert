@@ -3,6 +3,7 @@ const nextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["busboy", "pdfkit", "pdfjs-dist", "sharp", "docx"],
   async headers() {
+    const isDevelopment = process.env.NODE_ENV === "development";
     return [
       {
         source: "/:path*",
@@ -16,8 +17,7 @@ const nextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+            value: `default-src 'self'; script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`,
           },
         ],
       },
