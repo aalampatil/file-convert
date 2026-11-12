@@ -1,19 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
-import { ZodError } from "zod";
-
-export function apiErrorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
-  if (err instanceof ZodError) {
-    return res.status(400).json({ error: "validation_error", details: err.flatten() });
+import { MulterError } from "multer";
+export function apiErrorHandler(err: unknown, _req: Request, res: Response, next: NextFunction) {
+  if (res.headersSent) return next(err);
+  if (err instanceof MulterError) {
+    return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({ message:
+      err.code === "LIMIT_FILE_SIZE" ? "This file exceeds the upload size limit." : "Upload one file and one output format per request." });
   }
-
-  if (err && typeof err === "object" && "status" in err && typeof (err as any).status === "number") {
-    const status = (err as any).status as number;
-    const message = (err as any).message ?? "request_failed";
-    return res.status(status).json({ error: "request_failed", message });
+  if (err && typeof err === "object" && "status" in err && typeof err.status === "number" && err.status >= 400 && err.status < 500 || err && typeof err === "object" && "status" in err && err.status === 503) {
+    return res.status((err as { status: number }).status).json({ message: err instanceof Error ? err.message : "Request failed." });
   }
-
-  // eslint-disable-next-line no-console
   console.error(err);
-  return res.status(500).json({ error: "internal_error" });
+  return res.status(500).json({ message: "Something went wrong. Please try again." });
 }
-

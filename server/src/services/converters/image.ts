@@ -7,7 +7,7 @@ export async function convertImage(input: {
   onProgress: (p: number) => Promise<void> | void;
 }) {
   const target = input.targetFormat;
-  const pipeline = sharp(input.inputPath, { failOn: "none" });
+  const pipeline = sharp(input.inputPath, { failOn: "error", limitInputPixels: 40_000_000 }).rotate();
 
   await input.onProgress(35);
 
@@ -15,8 +15,7 @@ export async function convertImage(input: {
   else if (target === "jpg" || target === "jpeg") pipeline.jpeg({ quality: 92, mozjpeg: true });
   else if (target === "webp") pipeline.webp({ quality: 90 });
   else {
-    // Not a supported image output; still produce a PNG.
-    pipeline.png({ quality: 100 });
+    throw new Error("Unsupported image output format.");
   }
 
   await input.onProgress(70);

@@ -1,30 +1,38 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { JobRecord } from "./jobTypes.js";
-import { mongoState } from "../server/mongoState.js";
-import { JobModel } from "./models/JobModel.js";
-
+import { ensureDirs, recordsDir } from "./storage.js";
 const memoryJobs = new Map<string, JobRecord>();
-
+export function allJobs() { return [...memoryJobs.values()]; }
 export async function putJob(job: JobRecord) {
+  const target = path.join(recordsDir(), `${job.id}.json`);
+  await fs.writeFile(`${target}.tmp`, JSON.stringify(job), { mode: 0o600 });
+  await fs.rename(`${target}.tmp`, target);
   memoryJobs.set(job.id, job);
-  if (mongoState.enabled) await JobModel.updateOne({ id: job.id }, job, { upsert: true });
 }
-
-export async function getJobFromStore(jobId: string) {
-  const mem = memoryJobs.get(jobId);
-  if (mem) return mem;
-  if (!mongoState.enabled) return null;
-  const doc = await JobModel.findOne({ id: jobId }).lean<JobRecord>().exec();
-  if (!doc) return null;
-  memoryJobs.set(jobId, doc);
-  return doc;
-}
-
-export async function updateJob(jobId: string, patch: Partial<JobRecord>) {
-  const existing = await getJobFromStore(jobId);
-  if (!existing) return null;
-  const next = { ...existing, ...patch };
-  memoryJobs.set(jobId, next);
-  if (mongoState.enabled) await JobModel.updateOne({ id: jobId }, next, { upsert: true });
+export async function getJobFromStore(id: string) { return memoryJobs.get(id) ?? null; }
+export async function updateJob(id: string, patch: Partial<JobRecord>) {
+  const job = memoryJobs.get(id);
+  if (!job) return null;
+  const next = { ...job, ...patch };
+  await putJob(next);
   return next;
 }
-
+export async function deleteJob(id: string) {
+  await fs.rm(path.join(recordsDir(), `${id}.json`), { force: true });
+  memoryJobs.delete(id);
+}
+export async function loadJobs() {
+  await ensureDirs();
+  for (const name of await fs.readdir(recordsDir())) {
+    if (!/^[\w-]+\.json$/.test(name)) continue;
+    try {
+      const job = JSON.parse(await fs.readFile(path.join(recordsDir(), name), "utf8")) as JobRecord;
+      if (!job.id || `${job.id}.json` !== name) continue;
+      memoryJobs.set(job.id, job);
+      if (job.status === "queued" || job.status === "processing") {
+        await updateJob(job.id, { status: "failed", progress: 100, message: "The server restarted during conversion. Please try again." });
+      }
+    } catch (err) { console.error(`Could not restore job record ${name}`, err); }
+  }
+}
