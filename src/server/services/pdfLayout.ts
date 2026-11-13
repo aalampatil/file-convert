@@ -12,8 +12,10 @@ export const pythonEnvironment = () => ({
 });
 export function pythonExecutable() {
   if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+  // Python is a runtime executable. Do not trace its virtual environment into
+  // the JavaScript bundle: Linux venv symlinks point outside the project root.
   const local = path.join(
-    process.cwd(),
+    /* turbopackIgnore: true */ process.cwd(),
     ".venv",
     process.platform === "win32" ? "Scripts/python.exe" : "bin/python",
   );
